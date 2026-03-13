@@ -1,0 +1,150 @@
+@appsScriptUrl = https://script.google.com/macros/s/AKfycbx7-KNkelesbkcBgz55UorderMZVPbXgLs9jLUZ9tbMPRsL4jz1RXVloFH1GyZCIzgR/exec
+@sharedSecret = IKATANCINTA_SECRET
+@orderId = IKC-260312-1234
+@invitationSlug = bima-anisa-ikc-260312-1234
+
+### Health
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "health",
+  "payload": {}
+}
+
+### List Uploads
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "listUploads",
+  "payload": {}
+}
+
+### Create Wish
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "createWish",
+  "payload": {
+    "wish": {
+      "invitationSlug": "{{invitationSlug}}",
+      "name": "Rina",
+      "attendance": "hadir",
+      "message": "Semoga lancar sampai hari H.",
+      "createdAt": "2026-03-12T10:00:00.000Z"
+    }
+  }
+}
+
+### List Wishes
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "listWishes",
+  "payload": {
+    "invitationSlug": "{{invitationSlug}}"
+  }
+}
+
+### List Orders
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "listOrders",
+  "payload": {}
+}
+
+### Get Order By Id
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "getOrderById",
+  "payload": {
+    "orderId": "{{orderId}}"
+  }
+}
+
+### Get Order By Invitation Slug
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "getOrderByInvitationSlug",
+  "payload": {
+    "invitationSlug": "{{invitationSlug}}"
+  }
+}
+
+### Update Order Status
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "updateOrderStatus",
+  "payload": {
+    "orderId": "{{orderId}}",
+    "status": "published",
+    "updatedAt": "2026-03-13T08:00:00.000Z",
+    "publishedAt": "2026-03-13T08:00:00.000Z",
+    "publishedBy": "admin",
+    "lastUpdatedBy": "admin",
+    "lastUpdateType": "publish",
+    "lastUpdateNote": "Invitation siap dipublikasikan."
+  }
+}
+
+### Update Order Row
+POST {{appsScriptUrl}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "secret": "{{sharedSecret}}",
+  "action": "updateOrder",
+  "payload": {
+    "order": {
+      "order_id": "{{orderId}}",
+      "invitation_slug": "{{invitationSlug}}",
+      "created_at": "2026-03-12T10:00:00.000Z",
+      "updated_at": "2026-03-13T08:15:00.000Z",
+      "published_at": "",
+      "published_by": "",
+      "status": "processing",
+      "last_updated_by": "admin",
+      "last_update_type": "edit_order",
+      "last_update_note": "Admin memperbarui data acara.",
+      "customer_name": "Anisa Putri Revisi",
+      "customer_phone": "08123456789",
+      "customer_email": "anisa@example.com",
+      "package_tier": "PREMIUM",
+      "theme_slug": "timeless-promise",
+      "theme_name": "Timeless Promise",
+      "total_price": 110000,
+      "cover_asset_id": "asset_cover_123",
+      "gallery_asset_ids": "",
+      "music_asset_id": "",
+      "payload_json": "{\"orderId\":\"{{orderId}}\",\"invitationSlug\":\"{{invitationSlug}}\",\"customer\":{\"name\":\"Anisa Putri Revisi\",\"phone\":\"08123456789\",\"email\":\"anisa@example.com\"},\"groom\":{\"fullname\":\"Bima Pratama\",\"nickname\":\"Bima\"},\"bride\":{\"fullname\":\"Anisa Putri\",\"nickname\":\"Anisa\"},\"akad\":{\"date\":\"2026-03-31\",\"venue\":\"Gedung Kediri Baru\"},\"selectedTheme\":{\"slug\":\"timeless-promise\",\"packageTier\":\"PREMIUM\",\"name\":\"Timeless Promise\",\"presetId\":\"tlp-premium-001\"},\"selectedPackage\":{\"tier\":\"PREMIUM\",\"price\":110000}}"
+    }
+  }
+}

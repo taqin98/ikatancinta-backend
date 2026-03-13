@@ -1,0 +1,218 @@
+@baseUrl = http://127.0.0.1:3001/api
+@orderId = IKC-260312-1234
+@themeSlug = timeless-promise
+@invitationSlug = bima-anisa-ikc-260312-1234
+@adminEmail = admin@example.com
+@adminPassword = super-secret-password
+@adminToken = REPLACE_WITH_ADMIN_JWT
+
+### Health
+GET {{baseUrl}}/health
+Accept: application/json
+
+### Packages
+GET {{baseUrl}}/packages
+Accept: application/json
+
+### Themes
+GET {{baseUrl}}/themes?packageTier=PREMIUM
+Accept: application/json
+
+### Theme Invitations
+GET {{baseUrl}}/themes/{{themeSlug}}/invitations
+Accept: application/json
+
+### Invitation Detail
+GET {{baseUrl}}/invitations/{{invitationSlug}}
+Accept: application/json
+
+### Create Wish
+POST {{baseUrl}}/invitations/{{invitationSlug}}/wishes
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Rina",
+  "attendance": "hadir",
+  "message": "Semoga lancar sampai hari H."
+}
+
+### List Uploads
+GET {{baseUrl}}/uploads
+Accept: application/json
+
+### Admin Login
+POST {{baseUrl}}/admin/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### Admin Me
+GET {{baseUrl}}/admin/auth/me
+Accept: application/json
+Authorization: Bearer {{adminToken}}
+
+### Create Order
+POST {{baseUrl}}/orders
+Content-Type: application/json
+Accept: application/json
+
+{
+  "orderId": "{{orderId}}",
+  "invitationSlug": "{{invitationSlug}}",
+  "customer": {
+    "name": "Anisa Putri",
+    "phone": "08123456789",
+    "email": "anisa@example.com",
+    "address": "Kediri"
+  },
+  "groom": {
+    "fullname": "Bima Pratama",
+    "nickname": "Bima",
+    "parents": "Putra Bapak X & Ibu Y",
+    "instagram": "bimapratama"
+  },
+  "bride": {
+    "fullname": "Anisa Putri",
+    "nickname": "Anisa",
+    "parents": "Putri Bapak A & Ibu B",
+    "instagram": "anisaputri"
+  },
+  "akad": {
+    "date": "2026-03-30",
+    "startTime": "09:00",
+    "endTime": "10:00",
+    "venue": "Gedung Kediri",
+    "address": "Jl. Mawar No. 10",
+    "mapsLink": "https://maps.google.com"
+  },
+  "resepsi": null,
+  "isReceptionEnabled": false,
+  "sessions": [],
+  "coverImage": {
+    "assetId": "asset_cover_123",
+    "kind": "cover",
+    "name": "cover.jpg",
+    "mimeType": "image/jpeg",
+    "size": 345678,
+    "url": "https://drive.google.com/uc?export=view&id=cover123"
+  },
+  "galleryImages": [
+    {
+      "assetId": "asset_gallery_456",
+      "kind": "gallery",
+      "name": "gallery-1.jpg",
+      "mimeType": "image/jpeg",
+      "size": 456789,
+      "url": "https://drive.google.com/uc?export=view&id=gallery456"
+    }
+  ],
+  "stories": [],
+  "music": {
+    "mode": "list",
+    "trackId": "andmesh-cinta-luar-biasa",
+    "trackLabel": "Andmesh - Cinta Luar Biasa",
+    "previewUrl": "/audio/andmesh-cinta-luar-biasa.mp3"
+  },
+  "selectedTheme": {
+    "slug": "{{themeSlug}}",
+    "packageTier": "PREMIUM",
+    "presetId": "tlp-premium-001"
+  },
+  "selectedPackage": {
+    "tier": "PREMIUM"
+  }
+}
+
+### Orders
+GET {{baseUrl}}/orders
+Accept: application/json
+Authorization: Bearer {{adminToken}}
+
+### Orders Filtered
+GET {{baseUrl}}/orders?status=processing&packageTier=PREMIUM&themeSlug={{themeSlug}}
+Accept: application/json
+Authorization: Bearer {{adminToken}}
+
+### Order Detail
+GET {{baseUrl}}/orders/{{orderId}}
+Accept: application/json
+
+### Update Order Payload
+PUT {{baseUrl}}/orders/{{orderId}}
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{adminToken}}
+X-Admin-Actor: admin
+
+{
+  "customer": {
+    "name": "Anisa Putri Revisi",
+    "phone": "08123456789",
+    "email": "anisa@example.com"
+  },
+  "akad": {
+    "date": "2026-03-31",
+    "startTime": "10:00",
+    "endTime": "11:00",
+    "venue": "Gedung Kediri Baru",
+    "address": "Jl. Melati No. 20",
+    "mapsLink": "https://maps.google.com"
+  },
+  "note": "Admin memperbaiki jadwal akad."
+}
+
+### Update Order Status
+PATCH {{baseUrl}}/orders/{{orderId}}
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{adminToken}}
+X-Admin-Actor: admin
+
+{
+  "status": "published",
+  "note": "Pembayaran sudah diverifikasi."
+}
+
+### Publish Order
+POST {{baseUrl}}/orders/{{orderId}}/publish
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{adminToken}}
+X-Admin-Actor: admin
+
+{
+  "note": "Invitation siap dipublikasikan."
+}
+
+### Admin Summary
+GET {{baseUrl}}/admin/summary
+Accept: application/json
+Authorization: Bearer {{adminToken}}
+
+### Queue Email
+POST {{baseUrl}}/orders/email
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "orderId": "{{orderId}}",
+  "customer": {
+    "email": "anisa@example.com"
+  },
+  "selectedTheme": {
+    "slug": "timeless-promise"
+  },
+  "selectedPackage": {
+    "tier": "PREMIUM"
+  },
+  "summary": {
+    "galleryCount": 1,
+    "musicMode": "list"
+  }
+}

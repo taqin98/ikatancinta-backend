@@ -1,0 +1,13 @@
+@baseUrl = http://127.0.0.1:3001
+
+### OpenAPI JSON
+GET {{baseUrl}}/api/openapi.json
+Accept: application/json
+
+### API Playground HTML
+GET {{baseUrl}}/api/docs
+Accept: text/html
+
+### Swagger UI HTML
+GET {{baseUrl}}/api/swagger
+Accept: text/html
