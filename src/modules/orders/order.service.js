@@ -14,6 +14,7 @@ const ORDER_HEADERS = [
   "updated_at",
   "published_at",
   "published_by",
+  "completed_at",
   "status",
   "last_updated_by",
   "last_update_type",
@@ -189,29 +190,7 @@ function sanitizeOrderPayload(payload) {
   };
 }
 
-function deriveOrderProgress(order) {
-  if (order.status && order.status !== "processing") {
-    return {
-      status: normalizeOrderStatus(order.status, "processing"),
-      completedAt: order.status === "done" ? order.createdAt : null,
-    };
-  }
-
-  const createdAtMs = Date.parse(order.createdAt);
-  if (Number.isNaN(createdAtMs)) {
-    return { status: order.status || "processing", completedAt: null };
-  }
-
-  const completedAtMs = createdAtMs + 6500;
-  const isDone = Date.now() >= completedAtMs;
-  return {
-    status: isDone ? "done" : order.status || "processing",
-    completedAt: isDone ? new Date(completedAtMs).toISOString() : null,
-  };
-}
-
 export function serializeOrder(order) {
-  const progress = deriveOrderProgress(order);
   return {
     id: order.id,
     orderId: order.id,
@@ -220,8 +199,8 @@ export function serializeOrder(order) {
     updatedAt: order.updatedAt || order.createdAt,
     publishedAt: order.publishedAt || null,
     publishedBy: order.publishedBy || null,
-    completedAt: progress.completedAt,
-    status: progress.status,
+    completedAt: order.completedAt || null,
+    status: normalizeOrderStatus(order.status, "processing"),
     customerName: order.payload?.customer?.name || null,
     packageTier: order.payload?.selectedPackage?.tier || null,
     themeSlug: order.payload?.selectedTheme?.slug || null,
@@ -252,6 +231,7 @@ function mapOrderRowToOrder(row) {
     updatedAt: row.updated_at || row.created_at,
     publishedAt: row.published_at || null,
     publishedBy: row.published_by || null,
+    completedAt: row.completed_at || null,
     status: row.status || "processing",
     lastUpdatedBy: row.last_updated_by || null,
     lastUpdateType: row.last_update_type || null,
@@ -292,6 +272,7 @@ function buildOrderRow(serialized, payload, audit = {}) {
     updated_at: serialized.updatedAt,
     published_at: serialized.publishedAt || "",
     published_by: serialized.publishedBy || "",
+    completed_at: serialized.completedAt || "",
     status: serialized.status,
     last_updated_by: serialized.audit?.lastUpdatedBy || audit.updatedBy || "",
     last_update_type: serialized.audit?.lastUpdateType || audit.updateType || "",
@@ -427,6 +408,7 @@ async function createOrderWithSheets(payload) {
     updatedAt: now,
     publishedAt: status === "published" ? now : null,
     publishedBy: status === "published" ? audit.updatedBy : null,
+    completedAt: status === "done" ? now : null,
     status,
     lastUpdatedBy: audit.updatedBy,
     lastUpdateType: audit.updateType,
@@ -457,6 +439,7 @@ async function createOrderWithAppsScript(payload) {
     updatedAt: now,
     publishedAt: status === "published" ? now : null,
     publishedBy: status === "published" ? audit.updatedBy : null,
+    completedAt: status === "done" ? now : null,
     status,
     lastUpdatedBy: audit.updatedBy,
     lastUpdateType: audit.updateType,
@@ -473,6 +456,7 @@ async function createOrderWithAppsScript(payload) {
       updatedAt: serialized.updatedAt,
       publishedAt: serialized.publishedAt || "",
       publishedBy: serialized.publishedBy || "",
+      completedAt: serialized.completedAt || "",
       status: status,
       lastUpdatedBy: serialized.audit?.lastUpdatedBy || audit.updatedBy,
       lastUpdateType: serialized.audit?.lastUpdateType || audit.updateType,
@@ -519,6 +503,7 @@ export async function createOrder(payload) {
     updatedAt: now,
     publishedAt: status === "published" ? now : null,
     publishedBy: status === "published" ? audit.updatedBy : null,
+    completedAt: status === "done" ? now : null,
     status,
     lastUpdatedBy: audit.updatedBy,
     lastUpdateType: audit.updateType,
@@ -582,14 +567,12 @@ export async function editOrder(orderId, payload, meta = {}) {
   if (!currentOrder) return null;
 
   const currentPayload = currentOrder.payload || {};
-  const {
-    note: _note,
-    reason: _reason,
-    updatedBy: _updatedBy,
-    status: _status,
-    orderId: _ignoredOrderId,
-    ...editablePatch
-  } = payload || {};
+  const editablePatch = { ...(payload || {}) };
+  delete editablePatch.note;
+  delete editablePatch.reason;
+  delete editablePatch.updatedBy;
+  delete editablePatch.status;
+  delete editablePatch.orderId;
   validateEditRules(currentOrder, editablePatch);
   const mergedPayload = deepMergeOrderPayload(currentPayload, editablePatch);
   const sanitizedPayload = sanitizeOrderPayload({
@@ -613,6 +596,7 @@ export async function editOrder(orderId, payload, meta = {}) {
     updatedAt,
     publishedAt: currentOrder.publishedAt || null,
     publishedBy: currentOrder.publishedBy || null,
+    completedAt: currentOrder.completedAt || null,
     status: currentOrder.status,
     lastUpdatedBy: audit.updatedBy,
     lastUpdateType: audit.updateType,
@@ -639,6 +623,7 @@ export async function editOrder(orderId, payload, meta = {}) {
     updatedAt,
     publishedAt: currentOrder.publishedAt || null,
     publishedBy: currentOrder.publishedBy || null,
+    completedAt: currentOrder.completedAt || null,
     status: currentOrder.status,
     lastUpdatedBy: audit.updatedBy,
     lastUpdateType: audit.updateType,
@@ -666,6 +651,7 @@ export async function updateOrderStatus(orderId, payload, meta = {}) {
   const updatedAt = new Date().toISOString();
   const publishedAt = nextStatus === "published" ? updatedAt : "";
   const publishedBy = nextStatus === "published" ? audit.updatedBy : "";
+  const completedAt = nextStatus === "done" ? currentOrder.completedAt || updatedAt : "";
 
   if (env.dataStoreProvider === "apps_script") {
     const response = await callAppsScript("updateOrderStatus", {
@@ -674,6 +660,7 @@ export async function updateOrderStatus(orderId, payload, meta = {}) {
       updatedAt,
       publishedAt,
       publishedBy,
+      completedAt,
       lastUpdatedBy: audit.updatedBy,
       lastUpdateType: audit.updateType,
       lastUpdateNote: audit.note,
@@ -687,6 +674,7 @@ export async function updateOrderStatus(orderId, payload, meta = {}) {
       updated_at: updatedAt,
       published_at: publishedAt,
       published_by: publishedBy,
+      completed_at: completedAt,
       last_updated_by: audit.updatedBy,
       last_update_type: audit.updateType,
       last_update_note: audit.note,
@@ -700,6 +688,7 @@ export async function updateOrderStatus(orderId, payload, meta = {}) {
     updatedAt,
     publishedAt: nextStatus === "published" ? updatedAt : null,
     publishedBy: nextStatus === "published" ? audit.updatedBy : null,
+    completedAt: nextStatus === "done" ? current.completedAt || updatedAt : null,
     lastUpdatedBy: audit.updatedBy,
     lastUpdateType: audit.updateType,
     lastUpdateNote: audit.note,
