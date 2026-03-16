@@ -15,21 +15,29 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 
+app.set("trust proxy", true);
+
+function getRequestPublicBaseUrl(req) {
+  const forwardedProto = String(req.get("x-forwarded-proto") || "").split(",")[0].trim();
+  const protocol = forwardedProto || req.protocol || "http";
+  return `${protocol}://${req.get("host")}`;
+}
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: env.bodyLimit }));
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/api/openapi.json", (_req, res) => {
-  res.json(buildOpenApiSpec());
+app.get("/api/openapi.json", (req, res) => {
+  res.json(buildOpenApiSpec(getRequestPublicBaseUrl(req)));
 });
 
 app.get("/api/docs", (req, res) => {
-  const apiBaseUrl = `${req.protocol}://${req.get("host")}/api`;
+  const apiBaseUrl = `${getRequestPublicBaseUrl(req)}/api`;
   res.type("html").send(renderApiPlaygroundHtml(apiBaseUrl));
 });
 
 app.get("/api/swagger", (req, res) => {
-  const specUrl = `${req.protocol}://${req.get("host")}/api/openapi.json`;
+  const specUrl = `${getRequestPublicBaseUrl(req)}/api/openapi.json`;
   res.type("html").send(renderSwaggerUiHtml(specUrl));
 });
 

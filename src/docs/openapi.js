@@ -1,13 +1,6 @@
 import { env } from "../config/env.js";
 
-const servers = [
-  {
-    url: `${env.publicBaseUrl}/api`,
-    description: "Express backend",
-  },
-];
-
-export function buildOpenApiSpec() {
+export function buildOpenApiSpec(publicBaseUrl = env.publicBaseUrl) {
   return {
     openapi: "3.0.3",
     info: {
@@ -16,7 +9,12 @@ export function buildOpenApiSpec() {
       description:
         "UI dokumentasi dan test API untuk backend Express Ikatancinta. Frontend publik tetap mengarah ke Express; persistence bisa memakai Apps Script, Google direct, atau memory.",
     },
-    servers,
+    servers: [
+      {
+        url: `${String(publicBaseUrl || env.publicBaseUrl).replace(/\/+$/, "")}/api`,
+        description: "Express backend",
+      },
+    ],
     tags: [
       { name: "System" },
       { name: "Packages" },
