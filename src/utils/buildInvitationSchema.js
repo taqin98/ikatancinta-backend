@@ -19,6 +19,11 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const brideName = coupleParts[1] || "Adiba";
   const payload = order?.payload || {};
   const heroPhoto = payload?.coverImage?.url || theme?.thumbnail || theme?.image || "";
+  const bridePhoto = payload?.bride?.photo?.url || heroPhoto;
+  const groomPhoto = payload?.groom?.photo?.url || heroPhoto;
+  const akadCoverPhoto = payload?.akad?.coverImage?.url || heroPhoto;
+  const resepsiCoverPhoto = payload?.resepsi?.coverImage?.url || akadCoverPhoto || heroPhoto;
+  const closingBackgroundPhoto = payload?.closingBackgroundImage?.url || heroPhoto;
   const galleryImages = Array.isArray(payload?.galleryImages)
     ? payload.galleryImages.map((image) => image?.url).filter(Boolean)
     : [];
@@ -54,14 +59,14 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
         nameFull: groom?.fullname || `${groomName} Yulianto`,
         nickName: groom?.nickname || groomName,
         instagram: groom?.instagram || "ikatancinta.in",
-        photo: heroPhoto,
+        photo: groomPhoto,
         parentInfo: groom?.parents || "Putra dari Bapak Putra & Ibu Putri",
       },
       bride: {
         nameFull: bride?.fullname || `${brideName} Putri`,
         nickName: bride?.nickname || brideName,
         instagram: bride?.instagram || "ikatancinta.in",
-        photo: heroPhoto,
+        photo: bridePhoto,
         parentInfo: bride?.parents || "Putri dari Bapak Putra & Ibu Putri",
       },
       heroPhoto,
@@ -73,12 +78,14 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
         time: buildTimeRange(akad?.startTime, akad?.endTime),
         address: akad?.address || akad?.venue || "Simpang Lima Gumul, Kediri",
         mapsUrl: akad?.mapsLink || "https://maps.google.com",
+        coverPhoto: akadCoverPhoto,
       },
       resepsi: {
         date: resepsi?.date || akad?.date || "Senin, 30 Maret 2026",
         time: buildTimeRange(resepsi?.startTime, resepsi?.endTime),
         address: resepsi?.address || resepsi?.venue || akad?.address || akad?.venue || "Simpang Lima Gumul, Kediri",
         mapsUrl: resepsi?.mapsLink || akad?.mapsLink || "https://maps.google.com",
+        coverPhoto: resepsiCoverPhoto,
       },
       livestream: {
         date: akad?.date || "Senin, 30 Maret 2026",
@@ -90,8 +97,9 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
     copy: {
       openingGreeting: selectedTheme?.name || theme?.title || "The Wedding Of",
       openingText: "Tanpa mengurangi rasa hormat, kami mengundang Anda untuk menghadiri acara pernikahan kami.",
-      quote: "",
-      quoteSource: "",
+      quote: payload?.quote || "",
+      quoteSource: payload?.quoteSource || "",
+      closingBackgroundPhoto,
       closingText: "Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir.",
     },
     lovestory: packageConfig.capabilities.loveStory

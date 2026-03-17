@@ -18,6 +18,21 @@ const UPLOAD_HEADERS = [
   "created_at",
 ];
 
+function buildDriveThumbnailUrl(fileId) {
+  if (!fileId) return "";
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1600`;
+}
+
+function normalizeDriveAssetUrl(url, fileId) {
+  if (fileId) {
+    return buildDriveThumbnailUrl(fileId);
+  }
+
+  const raw = String(url || "");
+  const match = raw.match(/[?&]id=([^&#]+)/i) || raw.match(/\/d\/([^/?#]+)/i);
+  return match?.[1] ? buildDriveThumbnailUrl(decodeURIComponent(match[1])) : raw;
+}
+
 function mapUploadRowToAsset(row) {
   return {
     assetId: row.asset_id,
@@ -28,7 +43,7 @@ function mapUploadRowToAsset(row) {
     size: row.size ? Number(row.size) : null,
     driveFileId: row.drive_file_id || null,
     driveFolderId: row.drive_folder_id || null,
-    url: row.url || "",
+    url: normalizeDriveAssetUrl(row.url, row.drive_file_id),
     createdAt: row.created_at || null,
     storage: env.mediaStorageProvider,
   };

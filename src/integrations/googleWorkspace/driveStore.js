@@ -3,7 +3,7 @@ import { env } from "../../config/env.js";
 import { assertGoogleDriveEnabled, getDriveClient } from "./client.js";
 
 function buildDrivePublicUrl(fileId) {
-  return `https://drive.google.com/uc?export=view&id=${encodeURIComponent(fileId)}`;
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1600`;
 }
 
 async function findOrCreateOrderFolder(drive, orderId) {
