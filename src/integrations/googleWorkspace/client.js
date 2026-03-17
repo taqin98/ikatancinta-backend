@@ -5,16 +5,19 @@ const SHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"];
 
 function assertGoogleConfig() {
-  const hasKeyFile = Boolean(env.googleApplicationCredentials);
-  const hasInlineCredentials = Boolean(env.googleClientEmail && env.googlePrivateKey);
-
-  if (!hasKeyFile && !hasInlineCredentials) {
+  if (!hasGoogleCredentials()) {
     const error = new Error(
       "Google Workspace credentials are missing. Set GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_CLIENT_EMAIL + GOOGLE_PRIVATE_KEY."
     );
     error.status = 500;
     throw error;
   }
+}
+
+export function hasGoogleCredentials() {
+  const hasKeyFile = Boolean(env.googleApplicationCredentials);
+  const hasInlineCredentials = Boolean(env.googleClientEmail && env.googlePrivateKey);
+  return hasKeyFile || hasInlineCredentials;
 }
 
 function createAuth(scopes) {

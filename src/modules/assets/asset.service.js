@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { getDriveClient } from "../../integrations/googleWorkspace/client.js";
+import { getDriveClient, hasGoogleCredentials } from "../../integrations/googleWorkspace/client.js";
 import { env } from "../../config/env.js";
 
 const memoryCache = new Map();
@@ -54,43 +54,117 @@ function createDriveProxyError(error, fallbackMessage = "Failed to fetch asset f
   return proxyError;
 }
 
-async function fetchDriveAssetFromSource(fileId) {
+function buildPublicDriveSourceUrls(fileId) {
+  const encodedId = encodeURIComponent(fileId);
+  return [
+    `https://drive.google.com/uc?export=download&id=${encodedId}`,
+    `https://drive.google.com/uc?export=view&id=${encodedId}`,
+    `https://drive.google.com/thumbnail?id=${encodedId}&sz=w1600`,
+    `https://lh3.googleusercontent.com/d/${encodedId}=w1600`,
+  ];
+}
+
+function extractResponseErrorStatus(error) {
+  return error?.response?.status || error?.status || 0;
+}
+
+async function fetchDriveAssetViaApi(fileId) {
   const drive = await getDriveClient();
 
-  try {
-    const [metadataResponse, mediaResponse] = await Promise.all([
-      drive.files.get({
+  const [metadataResponse, mediaResponse] = await Promise.all([
+    drive.files.get({
+      fileId,
+      supportsAllDrives: true,
+      fields: "id,name,mimeType,modifiedTime,md5Checksum,size",
+    }),
+    drive.files.get(
+      {
         fileId,
+        alt: "media",
         supportsAllDrives: true,
-        fields: "id,name,mimeType,modifiedTime,md5Checksum,size",
-      }),
-      drive.files.get(
-        {
-          fileId,
-          alt: "media",
-          supportsAllDrives: true,
-        },
-        {
-          responseType: "arraybuffer",
-        }
-      ),
-    ]);
+      },
+      {
+        responseType: "arraybuffer",
+      }
+    ),
+  ]);
 
-    const metadata = metadataResponse.data || {};
-    const data = Buffer.from(mediaResponse.data || []);
+  const metadata = metadataResponse.data || {};
+  const data = Buffer.from(mediaResponse.data || []);
 
+  return {
+    data,
+    mimeType: metadata.mimeType || mediaResponse.headers?.["content-type"] || "application/octet-stream",
+    name: metadata.name || fileId,
+    etag: metadata.md5Checksum || null,
+    modifiedAt: metadata.modifiedTime || null,
+    contentLength: data.length,
+    expiresAt: Date.now() + getCacheTtlMs(),
+    cacheControl: getClientCacheControl(),
+  };
+}
+
+async function fetchDriveAssetViaPublicUrl(fileId) {
+  let lastStatus = 0;
+
+  for (const url of buildPublicDriveSourceUrls(fileId)) {
+    const response = await globalThis.fetch(url, {
+      redirect: "follow",
+      headers: {
+        Accept: "image/*,*/*;q=0.8",
+        "User-Agent": "ikatancinta-asset-proxy/1.0",
+      },
+    });
+
+    if (!response.ok) {
+      lastStatus = response.status;
+      continue;
+    }
+
+    const mimeType = response.headers.get("content-type") || "application/octet-stream";
+    if (mimeType.includes("text/html")) {
+      lastStatus = 502;
+      continue;
+    }
+
+    const data = Buffer.from(await response.arrayBuffer());
     return {
       data,
-      mimeType: metadata.mimeType || mediaResponse.headers?.["content-type"] || "application/octet-stream",
-      name: metadata.name || fileId,
-      etag: metadata.md5Checksum || null,
-      modifiedAt: metadata.modifiedTime || null,
+      mimeType,
+      name: `${fileId}.bin`,
+      etag: response.headers.get("etag") || null,
+      modifiedAt: response.headers.get("last-modified") || null,
       contentLength: data.length,
       expiresAt: Date.now() + getCacheTtlMs(),
       cacheControl: getClientCacheControl(),
     };
+  }
+
+  const error = new Error(
+    lastStatus === 429
+      ? "Google Drive public asset is rate limited"
+      : "Failed to fetch public Google Drive asset"
+  );
+  error.status = lastStatus === 404 ? 404 : 502;
+  throw error;
+}
+
+async function fetchDriveAssetFromSource(fileId) {
+  if (hasGoogleCredentials()) {
+    try {
+      return await fetchDriveAssetViaApi(fileId);
+    } catch (error) {
+      const status = extractResponseErrorStatus(error);
+      if (status && ![403, 404, 429, 500].includes(status)) {
+        throw createDriveProxyError(error);
+      }
+    }
+  }
+
+  try {
+    return await fetchDriveAssetViaPublicUrl(fileId);
   } catch (error) {
-    throw createDriveProxyError(error);
+    throw createDriveProxyError(error, "Failed to fetch asset from Drive API and public fallback");
   }
 }
 
