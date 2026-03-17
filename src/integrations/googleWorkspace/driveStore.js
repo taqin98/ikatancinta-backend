@@ -1,10 +1,7 @@
 import { Readable } from "node:stream";
 import { env } from "../../config/env.js";
+import { buildDriveAssetProxyUrl } from "../../utils/assetUrl.js";
 import { assertGoogleDriveEnabled, getDriveClient } from "./client.js";
-
-function buildDrivePublicUrl(fileId) {
-  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1600`;
-}
 
 async function findOrCreateOrderFolder(drive, orderId) {
   const parentId = env.googleDriveRootFolderId;
@@ -83,6 +80,6 @@ export async function uploadFileToDrive({ file, folderId, orderId, filename, mim
     size: uploadedFile.size ? Number(uploadedFile.size) : file.size,
     folderId: targetFolder.id,
     folderName: targetFolder.name,
-    url: env.googleDrivePublicRead && uploadedFile.id ? buildDrivePublicUrl(uploadedFile.id) : uploadedFile.webViewLink || "",
+    url: uploadedFile.id ? buildDriveAssetProxyUrl(uploadedFile.id) : uploadedFile.webViewLink || "",
   };
 }

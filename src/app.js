@@ -5,6 +5,7 @@ import { buildOpenApiSpec } from "./docs/openapi.js";
 import { renderApiPlaygroundHtml } from "./docs/apiPlaygroundHtml.js";
 import { renderSwaggerUiHtml } from "./docs/swaggerUiHtml.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
+import assetRoutes from "./modules/assets/asset.routes.js";
 import packageRoutes from "./modules/packages/package.routes.js";
 import themeRoutes from "./modules/themes/theme.routes.js";
 import invitationRoutes from "./modules/invitations/invitation.routes.js";
@@ -55,6 +56,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/packages", packageRoutes);
 app.use("/api/themes", themeRoutes);
+app.use("/api/assets", assetRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/orders", orderRoutes);

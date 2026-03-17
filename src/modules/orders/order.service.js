@@ -2,6 +2,7 @@ import { createEmailId, createOrderId, normalizeOrderId } from "../../utils/crea
 import { env } from "../../config/env.js";
 import { callAppsScript } from "../../integrations/appsScript/client.js";
 import { appendSheetObject, listSheetObjects, updateSheetObject } from "../../integrations/googleWorkspace/sheetsStore.js";
+import { normalizeDriveAssetUrl, normalizeDriveAssetUrlsDeep } from "../../utils/assetUrl.js";
 import { normalizePackageTier } from "../../utils/normalizePackageTier.js";
 import { getPackageConfig } from "../packages/package.service.js";
 import { getThemeBySlug } from "../themes/theme.service.js";
@@ -108,7 +109,7 @@ function sanitizeAssetReference(asset, fallbackKind = "file") {
     name: typeof asset.name === "string" ? asset.name : "asset",
     mimeType: typeof asset.mimeType === "string" ? asset.mimeType : "application/octet-stream",
     size: Number.isFinite(asset.size) ? asset.size : asset.size ? Number(asset.size) : null,
-    url: url || null,
+    url: normalizeDriveAssetUrl(url) || null,
   };
 }
 
@@ -211,7 +212,7 @@ export function serializeOrder(order) {
       lastUpdateType: order.lastUpdateType || null,
       lastUpdateNote: order.lastUpdateNote || null,
     },
-    payload: order.payload,
+    payload: normalizeDriveAssetUrlsDeep(order.payload),
   };
 }
 
@@ -475,7 +476,7 @@ async function createOrderWithAppsScript(payload) {
     },
   });
 
-  return response.data || serialized;
+  return normalizeDriveAssetUrlsDeep(response.data || serialized);
 }
 
 export async function createOrder(payload) {
@@ -517,7 +518,7 @@ export async function createOrder(payload) {
 export async function getOrders() {
   if (env.dataStoreProvider === "apps_script") {
     const response = await callAppsScript("listOrders");
-    return response.data || [];
+    return Array.isArray(response.data) ? response.data.map((order) => normalizeDriveAssetUrlsDeep(order)) : [];
   }
 
   if (env.dataStoreProvider === "google_sheets") {
@@ -533,7 +534,7 @@ export async function getOrderByInvitationSlug(invitationSlug) {
 
   if (env.dataStoreProvider === "apps_script") {
     const response = await callAppsScript("getOrderByInvitationSlug", { invitationSlug });
-    return response.data || null;
+    return normalizeDriveAssetUrlsDeep(response.data || null);
   }
 
   if (env.dataStoreProvider === "google_sheets") {
@@ -549,7 +550,7 @@ export async function getOrderByInvitationSlug(invitationSlug) {
 export async function getOrderById(orderId) {
   if (env.dataStoreProvider === "apps_script") {
     const response = await callAppsScript("getOrderById", { orderId });
-    return response.data || null;
+    return normalizeDriveAssetUrlsDeep(response.data || null);
   }
 
   if (env.dataStoreProvider === "google_sheets") {
@@ -609,7 +610,7 @@ export async function editOrder(orderId, payload, meta = {}) {
     const response = await callAppsScript("updateOrder", {
       order: buildOrderRow(serialized, nextPayload, audit),
     });
-    return response.data || serialized;
+    return normalizeDriveAssetUrlsDeep(response.data || serialized);
   }
 
   if (env.dataStoreProvider === "google_sheets") {
@@ -665,7 +666,7 @@ export async function updateOrderStatus(orderId, payload, meta = {}) {
       lastUpdateType: audit.updateType,
       lastUpdateNote: audit.note,
     });
-    return response.data || null;
+    return normalizeDriveAssetUrlsDeep(response.data || null);
   }
 
   if (env.dataStoreProvider === "google_sheets") {

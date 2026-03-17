@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import process from "node:process";
 
 dotenv.config();
 
@@ -44,4 +45,7 @@ export const env = {
   googleSheetsOrderEmailsSheet: process.env.GOOGLE_SHEETS_ORDER_EMAILS_SHEET || "order_emails",
   googleDriveRootFolderId: process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || "",
   googleDrivePublicRead: toBoolean(process.env.GOOGLE_DRIVE_PUBLIC_READ, false),
+  assetProxyCacheTtlSeconds: toNumber(process.env.ASSET_PROXY_CACHE_TTL_SECONDS, 60 * 60),
+  assetProxyMaxEntries: toNumber(process.env.ASSET_PROXY_CACHE_MAX_ENTRIES, 200),
+  assetProxyClientMaxAgeSeconds: toNumber(process.env.ASSET_PROXY_CLIENT_MAX_AGE_SECONDS, 60 * 60 * 24 * 30),
 };

@@ -1,3 +1,5 @@
+import { normalizeDriveAssetUrl } from "./assetUrl.js";
+
 function buildEventDateTime(date, timeRange) {
   if (!date) return "2026-03-30T10:00:00+07:00";
   const startTime = String(timeRange || "10:00").split(" - ")[0].trim() || "10:00";
@@ -18,14 +20,14 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const groomName = coupleParts[0] || "Habib";
   const brideName = coupleParts[1] || "Adiba";
   const payload = order?.payload || {};
-  const heroPhoto = payload?.coverImage?.url || theme?.thumbnail || theme?.image || "";
-  const bridePhoto = payload?.bride?.photo?.url || heroPhoto;
-  const groomPhoto = payload?.groom?.photo?.url || heroPhoto;
-  const akadCoverPhoto = payload?.akad?.coverImage?.url || heroPhoto;
-  const resepsiCoverPhoto = payload?.resepsi?.coverImage?.url || akadCoverPhoto || heroPhoto;
-  const closingBackgroundPhoto = payload?.closingBackgroundImage?.url || heroPhoto;
+  const heroPhoto = normalizeDriveAssetUrl(payload?.coverImage?.url) || theme?.thumbnail || theme?.image || "";
+  const bridePhoto = normalizeDriveAssetUrl(payload?.bride?.photo?.url) || heroPhoto;
+  const groomPhoto = normalizeDriveAssetUrl(payload?.groom?.photo?.url) || heroPhoto;
+  const akadCoverPhoto = normalizeDriveAssetUrl(payload?.akad?.coverImage?.url) || heroPhoto;
+  const resepsiCoverPhoto = normalizeDriveAssetUrl(payload?.resepsi?.coverImage?.url) || akadCoverPhoto || heroPhoto;
+  const closingBackgroundPhoto = normalizeDriveAssetUrl(payload?.closingBackgroundImage?.url) || heroPhoto;
   const galleryImages = Array.isArray(payload?.galleryImages)
-    ? payload.galleryImages.map((image) => image?.url).filter(Boolean)
+    ? payload.galleryImages.map((image) => normalizeDriveAssetUrl(image?.url)).filter(Boolean)
     : [];
   const loveStories = Array.isArray(payload?.stories)
     ? payload.stories
@@ -122,7 +124,7 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       livestreamEnabled: packageConfig.capabilities.livestream,
     },
     audio: {
-      src: music?.mode === "upload" ? music?.file?.url || "" : music?.previewUrl || "",
+      src: music?.mode === "upload" ? normalizeDriveAssetUrl(music?.file?.url) || "" : music?.previewUrl || "",
       autoplay: Boolean(music?.mode),
       loop: true,
     },
