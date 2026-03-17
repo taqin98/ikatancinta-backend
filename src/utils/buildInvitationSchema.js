@@ -80,14 +80,16 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       akad: {
         date: akad?.date || "Senin, 30 Maret 2026",
         time: buildTimeRange(akad?.startTime, akad?.endTime),
-        address: akad?.address || akad?.venue || "Simpang Lima Gumul, Kediri",
+        venueName: akad?.venue || "",
+        address: akad?.address || "Simpang Lima Gumul, Kediri",
         mapsUrl: akad?.mapsLink || "https://maps.google.com",
         coverPhoto: akadCoverPhoto,
       },
       resepsi: {
         date: resepsi?.date || akad?.date || "Senin, 30 Maret 2026",
         time: buildTimeRange(resepsi?.startTime, resepsi?.endTime),
-        address: resepsi?.address || resepsi?.venue || akad?.address || akad?.venue || "Simpang Lima Gumul, Kediri",
+        venueName: resepsi?.venue || "",
+        address: resepsi?.address || akad?.address || "Simpang Lima Gumul, Kediri",
         mapsUrl: resepsi?.mapsLink || akad?.mapsLink || "https://maps.google.com",
         coverPhoto: resepsiCoverPhoto,
       },
