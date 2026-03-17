@@ -110,7 +110,7 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
           { title: "Menjalin Asmara", text: "Hubungan kami tumbuh menjadi komitmen yang lebih serius.", date: "2021", photo: heroPhoto },
         ])
       : [],
-    gallery: (galleryImages.length ? galleryImages : Array.from({ length: Math.min(packageConfig.limits.galleryMax, 4) }, () => heroPhoto)).filter(Boolean),
+    gallery: galleryImages.slice(0, packageConfig.limits.galleryMax).filter(Boolean),
     features: {
       countdownEnabled: true,
       saveTheDateEnabled: true,
