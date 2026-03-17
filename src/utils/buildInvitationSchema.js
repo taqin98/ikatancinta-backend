@@ -20,6 +20,7 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const groomName = coupleParts[0] || "Habib";
   const brideName = coupleParts[1] || "Adiba";
   const payload = order?.payload || {};
+  const frontCoverPhoto = normalizeDriveAssetUrl(payload?.frontCoverImage?.url) || normalizeDriveAssetUrl(payload?.coverImage?.url) || theme?.thumbnail || theme?.image || "";
   const heroPhoto = normalizeDriveAssetUrl(payload?.coverImage?.url) || theme?.thumbnail || theme?.image || "";
   const bridePhoto = normalizeDriveAssetUrl(payload?.bride?.photo?.url) || heroPhoto;
   const groomPhoto = normalizeDriveAssetUrl(payload?.groom?.photo?.url) || heroPhoto;
@@ -71,6 +72,7 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
         photo: bridePhoto,
         parentInfo: bride?.parents || "Putri dari Bapak Putra & Ibu Putri",
       },
+      frontCoverPhoto,
       heroPhoto,
     },
     event: {

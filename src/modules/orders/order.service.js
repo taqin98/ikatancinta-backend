@@ -177,6 +177,7 @@ function sanitizeOrderPayload(payload) {
     orderId: requestedOrderId || undefined,
     invitationSlug,
     status: requestedStatus,
+    frontCoverImage: sanitizeAssetReference(payload?.frontCoverImage, "front-cover"),
     coverImage: sanitizeAssetReference(payload?.coverImage, "cover"),
     galleryImages,
     stories,
