@@ -1,5 +1,13 @@
 import { normalizeDriveAssetUrl } from "./assetUrl.js";
 
+const PUBLIC_INVITATION_STATUSES = new Set(["published", "done"]);
+
+function normalizeInvitationStatus(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
 function buildEventDateTime(date, timeRange) {
   if (!date) return "2026-03-30T10:00:00+07:00";
   const startTime = String(timeRange || "10:00").split(" - ")[0].trim() || "10:00";
@@ -46,11 +54,24 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const resepsi = payload?.resepsi || {};
   const selectedTheme = payload?.selectedTheme || {};
   const music = payload?.music || {};
+  const status = normalizeInvitationStatus(order?.status) || "processing";
+  const publishedAt = order?.publishedAt || null;
+  const completedAt = order?.completedAt || null;
+  const isPublished = PUBLIC_INVITATION_STATUSES.has(status);
 
   return {
+    status,
+    orderStatus: status,
+    isPublished,
+    publishedAt,
+    completedAt,
     invitation: {
       slug: invitationSlug || order?.invitationSlug || theme?.slug || "",
       orderId: order?.orderId || null,
+      status,
+      isPublished,
+      publishedAt,
+      completedAt,
     },
     guest: {
       name: "Nama Tamu",
