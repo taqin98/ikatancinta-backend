@@ -34,6 +34,8 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const groomPhoto = normalizeDriveAssetUrl(payload?.groom?.photo?.url) || heroPhoto;
   const akadCoverPhoto = normalizeDriveAssetUrl(payload?.akad?.coverImage?.url) || heroPhoto;
   const resepsiCoverPhoto = normalizeDriveAssetUrl(payload?.resepsi?.coverImage?.url) || akadCoverPhoto || heroPhoto;
+  const saveTheDateBackgroundPhoto = normalizeDriveAssetUrl(payload?.saveTheDateBackgroundImage?.url) || heroPhoto;
+  const wishesBackgroundPhoto = normalizeDriveAssetUrl(payload?.wishesBackgroundImage?.url) || heroPhoto;
   const closingBackgroundPhoto = normalizeDriveAssetUrl(payload?.closingBackgroundImage?.url) || heroPhoto;
   const galleryImages = Array.isArray(payload?.galleryImages)
     ? payload.galleryImages.map((image) => normalizeDriveAssetUrl(image?.url)).filter(Boolean)
@@ -126,6 +128,8 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       openingText: "Tanpa mengurangi rasa hormat, kami mengundang Anda untuk menghadiri acara pernikahan kami.",
       quote: payload?.quote || "",
       quoteSource: payload?.quoteSource || "",
+      saveTheDateBackgroundPhoto,
+      wishesBackgroundPhoto,
       closingBackgroundPhoto,
       closingText: "Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir.",
     },
