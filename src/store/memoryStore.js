@@ -3,4 +3,5 @@ export const memoryStore = {
   uploads: [],
   wishes: new Map(),
   orderEmails: [],
+  paymentMethods: [],
 };

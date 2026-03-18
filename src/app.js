@@ -11,6 +11,7 @@ import themeRoutes from "./modules/themes/theme.routes.js";
 import invitationRoutes from "./modules/invitations/invitation.routes.js";
 import uploadRoutes from "./modules/uploads/upload.routes.js";
 import orderRoutes from "./modules/orders/order.routes.js";
+import paymentMethodRoutes from "./modules/paymentMethods/paymentMethod.routes.js";
 import { notFoundHandler } from "./middlewares/notFound.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
@@ -60,6 +61,7 @@ app.use("/api/assets", assetRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payment-methods", paymentMethodRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.use(notFoundHandler);

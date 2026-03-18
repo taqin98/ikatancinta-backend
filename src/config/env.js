@@ -43,6 +43,7 @@ export const env = {
   googleSheetsUploadsSheet: process.env.GOOGLE_SHEETS_UPLOADS_SHEET || "uploads",
   googleSheetsWishesSheet: process.env.GOOGLE_SHEETS_WISHES_SHEET || "wishes",
   googleSheetsOrderEmailsSheet: process.env.GOOGLE_SHEETS_ORDER_EMAILS_SHEET || "order_emails",
+  googleSheetsPaymentMethodsSheet: process.env.GOOGLE_SHEETS_PAYMENT_METHODS_SHEET || "payment_methods",
   googleDriveRootFolderId: process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || "",
   googleDrivePublicRead: toBoolean(process.env.GOOGLE_DRIVE_PUBLIC_READ, false),
   assetProxyCacheTtlSeconds: toNumber(process.env.ASSET_PROXY_CACHE_TTL_SECONDS, 60 * 60),
