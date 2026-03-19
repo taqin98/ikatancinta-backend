@@ -56,6 +56,18 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const resepsi = payload?.resepsi || {};
   const selectedTheme = payload?.selectedTheme || {};
   const music = payload?.music || {};
+  const giftPayload = payload?.gift || {};
+  const giftBankList = Array.isArray(giftPayload.bankList)
+    ? giftPayload.bankList
+        .filter((item) => item?.bank || item?.account || item?.name)
+        .map((item) => ({
+          bank: item.bank || "",
+          account: item.account || item.accountNumber || "",
+          name: item.name || item.accountName || "",
+        }))
+    : [];
+  const giftShipping = giftPayload.shipping || {};
+  const hasGiftData = giftBankList.length > 0 || Boolean(giftShipping.recipient || giftShipping.phone || giftShipping.address);
   const status = normalizeInvitationStatus(order?.status) || "processing";
   const publishedAt = order?.publishedAt || null;
   const completedAt = order?.completedAt || null;
@@ -140,14 +152,17 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
         ])
       : [],
     gallery: galleryImages.slice(0, packageConfig.limits.galleryMax).filter(Boolean),
+    gift: {
+      bankList: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftBankList : [],
+      shipping: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftShipping : {},
+    },
     features: {
       countdownEnabled: true,
       saveTheDateEnabled: true,
-      digitalEnvelopeEnabled: packageConfig.capabilities.digitalEnvelope,
+      digitalEnvelopeEnabled: Boolean(packageConfig.capabilities.digitalEnvelope && hasGiftData),
       digitalEnvelopeInfo: {
-        bankList: packageConfig.capabilities.digitalEnvelope
-          ? [{ bank: "BCA", accountNumber: "1234567890", accountName: "Ikatan Cinta" }]
-          : [],
+        bankList: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftBankList : [],
+        shipping: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftShipping : {},
       },
       rsvpEnabled: packageConfig.capabilities.rsvp,
       livestreamEnabled: packageConfig.capabilities.livestream,
