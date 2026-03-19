@@ -160,10 +160,6 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       countdownEnabled: true,
       saveTheDateEnabled: true,
       digitalEnvelopeEnabled: Boolean(packageConfig.capabilities.digitalEnvelope && hasGiftData),
-      digitalEnvelopeInfo: {
-        bankList: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftBankList : [],
-        shipping: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftShipping : {},
-      },
       rsvpEnabled: packageConfig.capabilities.rsvp,
       livestreamEnabled: packageConfig.capabilities.livestream,
     },
