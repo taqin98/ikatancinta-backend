@@ -21,6 +21,42 @@ function buildTimeRange(startTime, endTime) {
   return `${start} - ${end} WIB`;
 }
 
+function normalizeAssetPayload(asset, fallbackKind = "file") {
+  if (!asset) return null;
+
+  if (typeof asset === "string") {
+    const url = normalizeDriveAssetUrl(asset);
+    return url ? { assetId: null, kind: fallbackKind, name: "asset", mimeType: "", size: null, url } : null;
+  }
+
+  if (typeof asset !== "object") return null;
+
+  const url = normalizeDriveAssetUrl(asset?.url || asset?.src || "");
+  const assetId = typeof asset?.assetId === "string" ? asset.assetId : null;
+  if (!url && !assetId) return null;
+
+  return {
+    assetId,
+    kind: typeof asset?.kind === "string" ? asset.kind : fallbackKind,
+    name: typeof asset?.name === "string" ? asset.name : "asset",
+    mimeType: typeof asset?.mimeType === "string" ? asset.mimeType : "",
+    size: Number.isFinite(asset?.size) ? asset.size : asset?.size ? Number(asset.size) : null,
+    url: url || null,
+  };
+}
+
+function normalizeStoryPayload(story, fallbackPhoto) {
+  if (!story || typeof story !== "object") return null;
+  const photo = normalizeAssetPayload(story?.photo, "love-story") || normalizeAssetPayload(fallbackPhoto, "love-story");
+  return {
+    title: story?.title || "",
+    description: story?.description || story?.text || story?.story || "",
+    text: story?.text || story?.description || story?.story || "",
+    date: story?.date || "",
+    photo,
+  };
+}
+
 export function buildInvitationSchema({ theme, packageConfig, invitationSlug, order, wishes }) {
   const coupleParts = String(theme?.couple || "Habib & Adiba")
     .split("&")
@@ -72,10 +108,30 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const publishedAt = order?.publishedAt || null;
   const completedAt = order?.completedAt || null;
   const isPublished = PUBLIC_INVITATION_STATUSES.has(status);
+  const rawStories = Array.isArray(payload?.stories)
+    ? payload.stories.map((story) => normalizeStoryPayload(story, heroPhoto)).filter(Boolean)
+    : [];
+  const rawGalleryImages = Array.isArray(payload?.galleryImages)
+    ? payload.galleryImages.map((image) => normalizeAssetPayload(image, "gallery")).filter(Boolean)
+    : [];
+  const rawGiftBankList = Array.isArray(giftPayload.bankList)
+    ? giftPayload.bankList
+        .filter((item) => item?.bank || item?.account || item?.name)
+        .map((item) => ({
+          bank: item.bank || "",
+          account: item.account || item.accountNumber || "",
+          accountNumber: item.accountNumber || item.account || "",
+          name: item.name || item.accountName || "",
+          accountName: item.accountName || item.name || "",
+          logo: normalizeAssetPayload(item.logo, "bank-logo"),
+        }))
+    : [];
 
   return {
     status,
     orderStatus: status,
+    orderId: order?.orderId || null,
+    invitationSlug: invitationSlug || order?.invitationSlug || theme?.slug || "",
     isPublished,
     publishedAt,
     completedAt,
@@ -91,6 +147,33 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       name: "Nama Tamu",
       greetingLabel: "Kepada Bapak/Ibu/Saudara/i",
       code: "",
+    },
+    customer: payload?.customer || null,
+    theme: {
+      slug: theme?.slug || "",
+      name: theme?.name || "",
+      title: theme?.title || "",
+      packageTier: packageConfig?.tier || theme?.packageTier || "",
+    },
+    selectedTheme: payload?.selectedTheme || {
+      slug: theme?.slug || "",
+      name: theme?.name || "",
+      packageTier: packageConfig?.tier || theme?.packageTier || "",
+    },
+    selectedPackage: payload?.selectedPackage || packageConfig,
+    groom: {
+      fullname: groom?.fullname || `${groomName} Yulianto`,
+      nickname: groom?.nickname || groomName,
+      instagram: groom?.instagram || "ikatancinta.in",
+      parents: groom?.parents || "Putra dari Bapak Putra & Ibu Putri",
+      photo: normalizeAssetPayload(groom?.photo, "groom") || normalizeAssetPayload(groomPhoto, "groom"),
+    },
+    bride: {
+      fullname: bride?.fullname || `${brideName} Putri`,
+      nickname: bride?.nickname || brideName,
+      instagram: bride?.instagram || "ikatancinta.in",
+      parents: bride?.parents || "Putri dari Bapak Putra & Ibu Putri",
+      photo: normalizeAssetPayload(bride?.photo, "bride") || normalizeAssetPayload(bridePhoto, "bride"),
     },
     couple: {
       groom: {
@@ -110,6 +193,8 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       frontCoverPhoto,
       heroPhoto,
     },
+    frontCoverImage: normalizeAssetPayload(payload?.frontCoverImage, "front-cover") || normalizeAssetPayload(frontCoverPhoto, "front-cover"),
+    coverImage: normalizeAssetPayload(payload?.coverImage, "cover") || normalizeAssetPayload(heroPhoto, "cover"),
     event: {
       dateISO: buildEventDateTime(akad?.date, akad?.startTime),
       akad: {
@@ -135,6 +220,26 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
         url: "https://youtube.com",
       },
     },
+    akad: {
+      date: akad?.date || "",
+      startTime: akad?.startTime || "",
+      endTime: akad?.endTime || "",
+      time: buildTimeRange(akad?.startTime, akad?.endTime),
+      venue: akad?.venue || "",
+      address: akad?.address || "Simpang Lima Gumul, Kediri",
+      mapsLink: akad?.mapsLink || "https://maps.google.com",
+      coverImage: normalizeAssetPayload(akad?.coverImage, "akad-cover") || normalizeAssetPayload(akadCoverPhoto, "akad-cover"),
+    },
+    resepsi: {
+      date: resepsi?.date || akad?.date || "",
+      startTime: resepsi?.startTime || "",
+      endTime: resepsi?.endTime || "",
+      time: buildTimeRange(resepsi?.startTime, resepsi?.endTime),
+      venue: resepsi?.venue || "",
+      address: resepsi?.address || akad?.address || "Simpang Lima Gumul, Kediri",
+      mapsLink: resepsi?.mapsLink || akad?.mapsLink || "https://maps.google.com",
+      coverImage: normalizeAssetPayload(resepsi?.coverImage, "resepsi-cover") || normalizeAssetPayload(resepsiCoverPhoto, "resepsi-cover"),
+    },
     copy: {
       openingGreeting: selectedTheme?.name || theme?.title || "The Wedding Of",
       openingText: "Tanpa mengurangi rasa hormat, kami mengundang Anda untuk menghadiri acara pernikahan kami.",
@@ -145,15 +250,25 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       closingBackgroundPhoto,
       closingText: "Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir.",
     },
+    quote: payload?.quote || "",
+    quoteSource: payload?.quoteSource || "",
+    saveTheDateBackgroundImage:
+      normalizeAssetPayload(payload?.saveTheDateBackgroundImage, "save-the-date-bg") || normalizeAssetPayload(saveTheDateBackgroundPhoto, "save-the-date-bg"),
+    wishesBackgroundImage:
+      normalizeAssetPayload(payload?.wishesBackgroundImage, "wishes-bg") || normalizeAssetPayload(wishesBackgroundPhoto, "wishes-bg"),
+    closingBackgroundImage:
+      normalizeAssetPayload(payload?.closingBackgroundImage, "closing-bg") || normalizeAssetPayload(closingBackgroundPhoto, "closing-bg"),
     lovestory: packageConfig.capabilities.loveStory
       ? (loveStories.length ? loveStories : [
           { title: "Pertama Bertemu", text: "Kami pertama kali bertemu dalam sebuah acara kampus.", date: "2019", photo: heroPhoto },
           { title: "Menjalin Asmara", text: "Hubungan kami tumbuh menjadi komitmen yang lebih serius.", date: "2021", photo: heroPhoto },
         ])
       : [],
+    stories: packageConfig.capabilities.loveStory ? rawStories : [],
     gallery: galleryImages.slice(0, packageConfig.limits.galleryMax).filter(Boolean),
+    galleryImages: rawGalleryImages,
     gift: {
-      bankList: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftBankList : [],
+      bankList: packageConfig.capabilities.digitalEnvelope && hasGiftData ? rawGiftBankList : [],
       shipping: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftShipping : {},
     },
     features: {
