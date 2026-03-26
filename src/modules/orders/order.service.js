@@ -167,7 +167,12 @@ function sanitizeOrderPayload(payload) {
     : [];
 
   const stories = packageConfig.capabilities.loveStory
-    ? Array.isArray(payload?.stories) ? payload.stories : []
+    ? Array.isArray(payload?.stories)
+      ? payload.stories.map((story) => ({
+          ...story,
+          photo: sanitizeAssetReference(story?.photo, "love-story"),
+        }))
+      : []
     : [];
 
   const invitationSlug = slugifyPart(payload?.invitationSlug || payload?.invitation_slug || "");

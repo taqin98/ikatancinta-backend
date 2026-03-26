@@ -46,7 +46,7 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
           title: story?.title || "",
           text: story?.description || "",
           date: story?.date || "",
-          photo: heroPhoto,
+          photo: normalizeDriveAssetUrl(story?.photo?.url) || heroPhoto,
         }))
         .filter((story) => story.title || story.text || story.date)
     : [];
