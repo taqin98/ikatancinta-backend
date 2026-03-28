@@ -217,6 +217,7 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
     },
     frontCoverImage: normalizeAssetPayload(payload?.frontCoverImage, "front-cover") || normalizeAssetPayload(frontCoverPhoto, "front-cover"),
     coverImage: normalizeAssetPayload(payload?.coverImage, "cover") || normalizeAssetPayload(heroPhoto, "cover"),
+    openingThumbnailImage: normalizeAssetPayload(payload?.openingThumbnailImage, "opening-thumbnail"),
     event: {
       dateISO: buildEventDateTime(akad?.date, akad?.startTime),
       akad: {
