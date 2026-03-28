@@ -141,6 +141,22 @@ function normalizeMusicPayload(music, packageConfig) {
   };
 }
 
+function normalizeText(value) {
+  return String(value || "").trim();
+}
+
+function inferLivestreamPlatformLabel(url, fallback = "") {
+  const normalizedUrl = normalizeText(url).toLowerCase();
+  if (normalizedUrl.includes("youtube.com") || normalizedUrl.includes("youtu.be")) return "YouTube";
+  if (normalizedUrl.includes("instagram.com")) return "Instagram";
+  if (normalizedUrl.includes("facebook.com") || normalizedUrl.includes("fb.watch")) return "Facebook";
+  if (normalizedUrl.includes("zoom.us")) return "Zoom";
+  if (normalizedUrl.includes("meet.google.com")) return "Google Meet";
+  if (normalizedUrl.includes("tiktok.com")) return "TikTok";
+  if (normalizedUrl.includes("twitch.tv")) return "Twitch";
+  return normalizeText(fallback) || "Livestream";
+}
+
 function sanitizeOrderPayload(payload) {
   const requestedOrderId = normalizeOrderId(payload?.orderId || payload?.order_id);
   const requestedStatus = normalizeOrderStatus(payload?.status, "processing");
@@ -174,6 +190,38 @@ function sanitizeOrderPayload(payload) {
         }))
       : []
     : [];
+  const normalizedLivestreamUrl = normalizeText(
+    payload?.livestream?.url ||
+      payload?.livestream?.link ||
+      payload?.streaming?.url ||
+      payload?.streaming?.link ||
+      payload?.event?.livestream?.url ||
+      payload?.event?.livestream?.link,
+  );
+  const livestream = {
+    enabled: Boolean(
+      payload?.livestream?.enabled ||
+        payload?.streaming?.enabled ||
+        payload?.event?.livestream?.enabled ||
+        normalizedLivestreamUrl,
+    ),
+    url: normalizedLivestreamUrl,
+    platformLabel: inferLivestreamPlatformLabel(
+      normalizedLivestreamUrl,
+      payload?.livestream?.platformLabel ||
+        payload?.livestream?.label ||
+        payload?.streaming?.platformLabel ||
+        payload?.streaming?.label ||
+        payload?.event?.livestream?.platformLabel ||
+        payload?.event?.livestream?.label,
+    ),
+    date: normalizeText(payload?.livestream?.date || payload?.streaming?.date || payload?.event?.livestream?.date),
+    time: normalizeText(payload?.livestream?.time || payload?.streaming?.time || payload?.event?.livestream?.time),
+  };
+  const features = {
+    ...(payload?.features || {}),
+    livestreamEnabled: Boolean(payload?.features?.livestreamEnabled || livestream.enabled || livestream.url),
+  };
 
   const invitationSlug = slugifyPart(payload?.invitationSlug || payload?.invitation_slug || "");
 
@@ -187,6 +235,8 @@ function sanitizeOrderPayload(payload) {
     galleryImages,
     stories,
     music: normalizeMusicPayload(payload?.music, packageConfig),
+    livestream,
+    features,
     selectedTheme: {
       ...selectedTheme,
       packageTier: packageConfig.tier,

@@ -21,6 +21,22 @@ function buildTimeRange(startTime, endTime) {
   return `${start} - ${end} WIB`;
 }
 
+function normalizeText(value) {
+  return String(value || "").trim();
+}
+
+function inferLivestreamPlatformLabel(url, fallback = "") {
+  const normalizedUrl = normalizeText(url).toLowerCase();
+  if (normalizedUrl.includes("youtube.com") || normalizedUrl.includes("youtu.be")) return "YouTube";
+  if (normalizedUrl.includes("instagram.com")) return "Instagram";
+  if (normalizedUrl.includes("facebook.com") || normalizedUrl.includes("fb.watch")) return "Facebook";
+  if (normalizedUrl.includes("zoom.us")) return "Zoom";
+  if (normalizedUrl.includes("meet.google.com")) return "Google Meet";
+  if (normalizedUrl.includes("tiktok.com")) return "TikTok";
+  if (normalizedUrl.includes("twitch.tv")) return "Twitch";
+  return normalizeText(fallback) || "Livestream";
+}
+
 function normalizeAssetPayload(asset, fallbackKind = "file") {
   if (!asset) return null;
 
@@ -114,6 +130,12 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const rawGalleryImages = Array.isArray(payload?.galleryImages)
     ? payload.galleryImages.map((image) => normalizeAssetPayload(image, "gallery")).filter(Boolean)
     : [];
+  const rawLivestream = payload?.livestream || payload?.streaming || payload?.event?.livestream || {};
+  const livestreamUrl = normalizeText(rawLivestream?.url || rawLivestream?.link);
+  const livestreamEnabled = Boolean(payload?.features?.livestreamEnabled || rawLivestream?.enabled || livestreamUrl);
+  const livestreamPlatformLabel = inferLivestreamPlatformLabel(livestreamUrl, rawLivestream?.platformLabel || rawLivestream?.label);
+  const livestreamDate = normalizeText(rawLivestream?.date || akad?.date);
+  const livestreamTime = normalizeText(rawLivestream?.time || buildTimeRange(akad?.startTime, akad?.endTime));
   const rawGiftBankList = Array.isArray(giftPayload.bankList)
     ? giftPayload.bankList
         .filter((item) => item?.bank || item?.account || item?.name)
@@ -214,10 +236,10 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
         coverPhoto: resepsiCoverPhoto,
       },
       livestream: {
-        date: akad?.date || "Senin, 30 Maret 2026",
-        time: buildTimeRange(akad?.startTime, akad?.endTime),
-        platformLabel: "YouTube",
-        url: "https://youtube.com",
+        date: livestreamDate,
+        time: livestreamTime,
+        platformLabel: livestreamPlatformLabel,
+        url: livestreamUrl,
       },
     },
     akad: {
@@ -271,12 +293,19 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       bankList: packageConfig.capabilities.digitalEnvelope && hasGiftData ? rawGiftBankList : [],
       shipping: packageConfig.capabilities.digitalEnvelope && hasGiftData ? giftShipping : {},
     },
+    livestream: {
+      enabled: livestreamEnabled,
+      date: livestreamDate,
+      time: livestreamTime,
+      platformLabel: livestreamPlatformLabel,
+      url: livestreamUrl,
+    },
     features: {
       countdownEnabled: true,
       saveTheDateEnabled: true,
       digitalEnvelopeEnabled: Boolean(packageConfig.capabilities.digitalEnvelope && hasGiftData),
       rsvpEnabled: packageConfig.capabilities.rsvp,
-      livestreamEnabled: packageConfig.capabilities.livestream,
+      livestreamEnabled: livestreamEnabled,
     },
     audio: {
       src: music?.mode === "upload" ? normalizeDriveAssetUrl(music?.file?.url) || "" : music?.previewUrl || "",
