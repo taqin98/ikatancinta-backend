@@ -39,6 +39,7 @@ Accept: application/json
       "name": "Rina",
       "attendance": "hadir",
       "message": "Semoga lancar sampai hari H.",
+      "source": "guest_wish",
       "createdAt": "2026-03-12T10:00:00.000Z"
     }
   }

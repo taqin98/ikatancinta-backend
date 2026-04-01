@@ -5,10 +5,26 @@ import { getOrderByInvitationSlug } from "../orders/order.service.js";
 import { getThemeBySlug } from "../themes/theme.service.js";
 import { listAllWishes, listWishesByOrderId, listWishesBySlug, prependWish } from "./wish.repository.js";
 
-const WISH_HEADERS = ["wish_id", "invitation_slug", "order_id", "name", "attendance", "message", "created_at"];
+const WISH_HEADERS = ["wish_id", "invitation_slug", "order_id", "name", "attendance", "message", "source", "created_at"];
 
 function createWishId() {
   return `wish_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeWishSource(value, record = null) {
+  const normalized = String(value || record?.source || record?.entrySource || record?.entry_source || "")
+    .trim()
+    .toLowerCase();
+
+  if (normalized === "qr_checkin" || normalized === "qr-checkin" || normalized === "qr") {
+    return "qr_checkin";
+  }
+
+  if (!normalized && String(record?.message || record?.comment || "").trim() === "Check-in via QR tamu.") {
+    return "qr_checkin";
+  }
+
+  return "guest_wish";
 }
 
 function normalizeWishRecord(record, options = {}) {
@@ -19,6 +35,7 @@ function normalizeWishRecord(record, options = {}) {
     name: record?.name || record?.author || "Anonim",
     attendance: record?.attendance || "hadir",
     message: record?.message || record?.comment || "",
+    source: normalizeWishSource(record?.source, record),
     createdAt: record?.createdAt || record?.created_at || new Date().toISOString(),
   };
 }
@@ -30,6 +47,7 @@ function mapWishRecordToEntry(record, options = {}) {
     author: normalized.name,
     comment: normalized.message,
     attendance: normalized.attendance,
+    source: normalized.source,
     createdAt: normalized.createdAt,
   };
 }
@@ -106,6 +124,7 @@ export async function createWish(slug, payload) {
     author: payload?.name || "Anonim",
     comment: payload?.message || "",
     attendance: payload?.attendance || "hadir",
+    source: normalizeWishSource(payload?.source, payload),
     createdAt: new Date().toISOString(),
   };
 
@@ -117,6 +136,7 @@ export async function createWish(slug, payload) {
         name: entry.author,
         attendance: entry.attendance,
         message: entry.comment,
+        source: entry.source,
         createdAt: entry.createdAt,
       },
     });
@@ -131,6 +151,7 @@ export async function createWish(slug, payload) {
       name: entry.author,
       attendance: entry.attendance,
       message: entry.comment,
+      source: entry.source,
       created_at: entry.createdAt,
     });
     return entry;

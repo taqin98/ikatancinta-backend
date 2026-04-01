@@ -38,7 +38,8 @@ Accept: application/json
 {
   "name": "Rina",
   "attendance": "hadir",
-  "message": "Semoga lancar sampai hari H."
+  "message": "Semoga lancar sampai hari H.",
+  "source": "guest_wish"
 }
 
 ### List Uploads
