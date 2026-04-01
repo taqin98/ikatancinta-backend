@@ -146,6 +146,52 @@ export function buildOpenApiSpec(publicBaseUrl = env.publicBaseUrl) {
           },
         },
       },
+      "/invitations/{slug}/list-wishes": {
+        get: {
+          tags: ["Invitations"],
+          summary: "List normalized wish records by invitation slug",
+          parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "bima-anisa-ikc-260312-1234" } }],
+          responses: {
+            200: {
+              description: "Wish list for invitation",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: {
+                        type: "object",
+                        properties: {
+                          invitationSlug: { type: "string", example: "bima-anisa-ikc-260312-1234" },
+                          orderId: { type: "string", nullable: true, example: "IKC-260312-1234" },
+                          total: { type: "integer", example: 2 },
+                          wishes: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                wishId: { type: "string", nullable: true, example: "wish_1710000000000_ab12cd" },
+                                invitationSlug: { type: "string", example: "bima-anisa-ikc-260312-1234" },
+                                orderId: { type: "string", nullable: true, example: "IKC-260312-1234" },
+                                name: { type: "string", example: "Rina" },
+                                attendance: { type: "string", example: "hadir" },
+                                message: { type: "string", example: "Semoga lancar sampai hari H." },
+                                createdAt: { type: "string", format: "date-time", example: "2026-03-12T10:00:00.000Z" },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            404: { description: "Invitation theme not found" },
+          },
+        },
+      },
       "/invitations/{slug}/wishes": {
         post: {
           tags: ["Invitations"],

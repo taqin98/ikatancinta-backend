@@ -1,5 +1,7 @@
 import { getInvitationBySlug } from "./invitation.service.js";
-import { createWish } from "../wishes/wish.service.js";
+import { getOrderByInvitationSlug } from "../orders/order.service.js";
+import { getThemeBySlug } from "../themes/theme.service.js";
+import { createWish, listWishRecordsBySlug } from "../wishes/wish.service.js";
 
 export async function getInvitationController(req, res, next) {
   try {
@@ -22,6 +24,31 @@ export async function createWishController(req, res, next) {
       success: true,
       message: "Wish accepted",
       data: entry,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function listInvitationWishesController(req, res, next) {
+  try {
+    const relatedOrder = await getOrderByInvitationSlug(req.params.slug);
+    const theme = getThemeBySlug(req.params.slug);
+
+    if (!relatedOrder && !theme) {
+      res.status(404).json({ success: false, message: "Invitation theme not found" });
+      return;
+    }
+
+    const wishes = await listWishRecordsBySlug(req.params.slug);
+    res.json({
+      success: true,
+      data: {
+        invitationSlug: req.params.slug,
+        orderId: relatedOrder?.orderId || null,
+        total: wishes.length,
+        wishes,
+      },
     });
   } catch (error) {
     next(error);

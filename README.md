@@ -110,6 +110,11 @@ Catatan:
   - Express kirim ke Apps Script action `createWish`
   - Apps Script append row ke sheet `wishes`
 
+- `GET /api/invitations/:slug/list-wishes`
+  - Express cek `slug` valid sebagai `invitation_slug` order atau `theme` slug
+  - Express baca sheet `wishes` berdasarkan `invitation_slug`
+  - response mengembalikan record wishes ter-normalisasi untuk kebutuhan referensi guest book
+
 - `GET /api/orders` dan `GET /api/orders/:orderId`
   - Express membaca data melalui Apps Script action `listOrders` dan `getOrderById`
   - `GET /api/orders/:orderId` juga mengembalikan `uploads` dan `wishes` yang terkait
@@ -145,6 +150,7 @@ Catatan:
 - `GET /api/themes`
 - `GET /api/themes/:slug/invitations`
 - `GET /api/invitations/:slug`
+- `GET /api/invitations/:slug/list-wishes`
 - `POST /api/invitations/:slug/wishes`
 - `POST /api/uploads`
 - `GET /api/uploads`

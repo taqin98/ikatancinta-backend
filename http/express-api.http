@@ -26,6 +26,10 @@ Accept: application/json
 GET {{baseUrl}}/invitations/{{invitationSlug}}
 Accept: application/json
 
+### Invitation Wishes List
+GET {{baseUrl}}/invitations/{{invitationSlug}}/list-wishes
+Accept: application/json
+
 ### Create Wish
 POST {{baseUrl}}/invitations/{{invitationSlug}}/wishes
 Content-Type: application/json

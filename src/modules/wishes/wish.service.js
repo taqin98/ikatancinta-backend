@@ -7,30 +7,54 @@ import { listAllWishes, listWishesByOrderId, listWishesBySlug, prependWish } fro
 
 const WISH_HEADERS = ["wish_id", "invitation_slug", "order_id", "name", "attendance", "message", "created_at"];
 
-function mapWishRecordToEntry(record) {
+function createWishId() {
+  return `wish_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeWishRecord(record, options = {}) {
   return {
-    orderId: record.order_id || null,
-    author: record.name || "Anonim",
-    comment: record.message || "",
-    attendance: record.attendance || "hadir",
-    createdAt: record.created_at || new Date().toISOString(),
+    wishId: record?.wishId || record?.wish_id || null,
+    invitationSlug: record?.invitationSlug || record?.invitation_slug || options.invitationSlug || null,
+    orderId: record?.orderId || record?.order_id || null,
+    name: record?.name || record?.author || "Anonim",
+    attendance: record?.attendance || "hadir",
+    message: record?.message || record?.comment || "",
+    createdAt: record?.createdAt || record?.created_at || new Date().toISOString(),
   };
 }
 
-export async function listWishes(slug) {
+function mapWishRecordToEntry(record, options = {}) {
+  const normalized = normalizeWishRecord(record, options);
+  return {
+    orderId: normalized.orderId,
+    author: normalized.name,
+    comment: normalized.message,
+    attendance: normalized.attendance,
+    createdAt: normalized.createdAt,
+  };
+}
+
+export async function listWishRecordsBySlug(slug) {
+  if (!slug) return [];
+
   if (env.dataStoreProvider === "apps_script") {
     const response = await callAppsScript("listWishes", { invitationSlug: slug });
-    return response.data || [];
+    return (response.data || []).map((record) => normalizeWishRecord(record, { invitationSlug: slug }));
   }
 
   if (env.dataStoreProvider === "google_sheets") {
     const rows = await listSheetObjects("wishes", WISH_HEADERS);
     return rows
       .filter((row) => row.invitation_slug === slug)
-      .map((row) => mapWishRecordToEntry(row));
+      .map((row) => normalizeWishRecord(row, { invitationSlug: slug }));
   }
 
-  return listWishesBySlug(slug);
+  return listWishesBySlug(slug).map((record) => normalizeWishRecord(record, { invitationSlug: slug }));
+}
+
+export async function listWishes(slug) {
+  const rows = await listWishRecordsBySlug(slug);
+  return rows.map((record) => mapWishRecordToEntry(record, { invitationSlug: slug }));
 }
 
 export async function listWishRecordsByOrderId(orderId) {
@@ -38,31 +62,31 @@ export async function listWishRecordsByOrderId(orderId) {
 
   if (env.dataStoreProvider === "apps_script") {
     const response = await callAppsScript("listWishes", { orderId });
-    return response.data || [];
+    return (response.data || []).map((record) => normalizeWishRecord(record));
   }
 
   if (env.dataStoreProvider === "google_sheets") {
     const rows = await listSheetObjects("wishes", WISH_HEADERS);
     return rows
       .filter((row) => row.order_id === orderId)
-      .map((row) => mapWishRecordToEntry(row));
+      .map((row) => normalizeWishRecord(row));
   }
 
-  return listWishesByOrderId(orderId);
+  return listWishesByOrderId(orderId).map((record) => normalizeWishRecord(record));
 }
 
 export async function listAllWishRecords() {
   if (env.dataStoreProvider === "apps_script") {
     const response = await callAppsScript("listWishes", {});
-    return response.data || [];
+    return (response.data || []).map((record) => normalizeWishRecord(record));
   }
 
   if (env.dataStoreProvider === "google_sheets") {
     const rows = await listSheetObjects("wishes", WISH_HEADERS);
-    return rows.map((row) => mapWishRecordToEntry(row));
+    return rows.map((row) => normalizeWishRecord(row));
   }
 
-  return listAllWishes();
+  return listAllWishes().map((record) => normalizeWishRecord(record));
 }
 
 export async function createWish(slug, payload) {
@@ -76,6 +100,8 @@ export async function createWish(slug, payload) {
   }
 
   const entry = {
+    wishId: createWishId(),
+    invitationSlug: slug,
     orderId: relatedOrder?.orderId || null,
     author: payload?.name || "Anonim",
     comment: payload?.message || "",
@@ -99,7 +125,7 @@ export async function createWish(slug, payload) {
 
   if (env.dataStoreProvider === "google_sheets") {
     await appendSheetObject("wishes", WISH_HEADERS, {
-      wish_id: `wish_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      wish_id: entry.wishId,
       invitation_slug: slug,
       order_id: entry.orderId || "",
       name: entry.author,
