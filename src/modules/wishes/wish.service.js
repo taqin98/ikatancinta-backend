@@ -11,6 +11,23 @@ function createWishId() {
   return `wish_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function normalizePersonKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function isQrCheckInRecord(record) {
+  return normalizeWishSource(record?.source, record) === "qr_checkin";
+}
+
+function createConflictError(message) {
+  const error = new Error(message);
+  error.status = 409;
+  return error;
+}
+
 function normalizeWishSource(value, record = null) {
   const normalized = String(value || record?.source || record?.entrySource || record?.entry_source || "")
     .trim()
@@ -127,6 +144,20 @@ export async function createWish(slug, payload) {
     source: normalizeWishSource(payload?.source, payload),
     createdAt: new Date().toISOString(),
   };
+
+  if (entry.source === "qr_checkin") {
+    const nameKey = normalizePersonKey(entry.author);
+    if (nameKey) {
+      const existingRecords = await listWishRecordsBySlug(slug);
+      const existingQrCheckIn = existingRecords.find(
+        (record) => isQrCheckInRecord(record) && normalizePersonKey(record.name) === nameKey
+      );
+
+      if (existingQrCheckIn) {
+        throw createConflictError(`Tamu ${entry.author} sudah pernah scan QR.`);
+      }
+    }
+  }
 
   if (env.dataStoreProvider === "apps_script") {
     const response = await callAppsScript("createWish", {

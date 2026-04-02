@@ -217,6 +217,7 @@ export function buildOpenApiSpec(publicBaseUrl = env.publicBaseUrl) {
           },
           responses: {
             201: { description: "Wish accepted" },
+            409: { description: "Duplicate QR check-in for the same guest name" },
             404: { description: "Invitation theme not found" },
           },
         },
