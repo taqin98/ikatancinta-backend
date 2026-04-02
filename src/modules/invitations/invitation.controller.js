@@ -46,6 +46,11 @@ export async function listInvitationWishesController(req, res, next) {
       data: {
         invitationSlug: req.params.slug,
         orderId: relatedOrder?.orderId || null,
+        packageTier: relatedOrder?.packageTier || theme?.packageTier || null,
+        themeSlug: relatedOrder?.themeSlug || theme?.slug || null,
+        orderStatus: relatedOrder?.status || null,
+        publishedAt: relatedOrder?.publishedAt || null,
+        isPublished: relatedOrder ? ["published", "done"].includes(String(relatedOrder.status || "").toLowerCase()) : true,
         total: wishes.length,
         wishes,
       },
