@@ -1,15 +1,21 @@
-import { getThemeBySlug, getThemeInvitations, getThemes } from "./theme.service.js";
+import { getThemeBySlug, getThemes } from "./theme.service.js";
+import { getLiveThemeInvitations } from "./themeInvitation.service.js";
 
 export function listThemes(req, res) {
   res.json(getThemes(req.query));
 }
 
-export function listThemeInvitations(req, res) {
-  const theme = getThemeBySlug(req.params.slug);
-  if (!theme) {
-    res.status(404).json({ success: false, message: "Theme not found" });
-    return;
-  }
+export async function listThemeInvitations(req, res, next) {
+  try {
+    const theme = getThemeBySlug(req.params.slug);
+    if (!theme) {
+      res.status(404).json({ success: false, message: "Theme not found" });
+      return;
+    }
 
-  res.json(getThemeInvitations(req.params.slug));
+    const invitations = await getLiveThemeInvitations(req.params.slug);
+    res.json(Array.isArray(invitations) ? invitations : []);
+  } catch (error) {
+    next(error);
+  }
 }
