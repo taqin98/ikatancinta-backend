@@ -115,6 +115,12 @@ export function buildOpenApiSpec(publicBaseUrl = env.publicBaseUrl) {
             { name: "packageTier", in: "query", schema: { type: "string", example: "PREMIUM" } },
             { name: "slug", in: "query", schema: { type: "string" } },
             { name: "presetId", in: "query", schema: { type: "string" } },
+            {
+              name: "category",
+              in: "query",
+              schema: { type: "string", example: "Classic" },
+              description: "Filter tema berdasarkan satu kategori. Tetap cocok untuk theme.category yang berbentuk array.",
+            },
             { name: "status", in: "query", schema: { type: "string", example: "active" } },
           ],
           responses: {
