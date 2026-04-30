@@ -31,7 +31,7 @@ export const themes = [
     slug: "ivory-grace",
     presetId: "ivg-basic-001",
     name: "Ivory Grace",
-    category: ["Minimalist"],
+    category: ["Minimalist", "Modern"],
     packageTier: "BASIC",
     description: "Minimalist luxury dengan countdown dan audio floating.",
     title: "The Wedding Of",
