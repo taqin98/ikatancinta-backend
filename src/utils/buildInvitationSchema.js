@@ -173,7 +173,14 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
     : [];
   const rawLivestream = payload?.livestream || payload?.streaming || payload?.event?.livestream || {};
   const livestreamUrl = normalizeText(rawLivestream?.url || rawLivestream?.link);
-  const livestreamEnabled = Boolean(payload?.features?.livestreamEnabled || rawLivestream?.enabled || livestreamUrl);
+  const isLivestreamExplicitlyDisabled =
+    payload?.features?.livestreamEnabled === false ||
+    rawLivestream?.enabled === false;
+  const livestreamEnabled = !isLivestreamExplicitlyDisabled && Boolean(
+    payload?.features?.livestreamEnabled ||
+    rawLivestream?.enabled ||
+    livestreamUrl
+  ) && Boolean(livestreamUrl);
   const livestreamPlatformLabel = inferLivestreamPlatformLabel(livestreamUrl, rawLivestream?.platformLabel || rawLivestream?.label);
   const livestreamDate = normalizeText(rawLivestream?.date || akad?.date);
   const livestreamTime = normalizeText(rawLivestream?.time || buildTimeRange(akad?.startTime, akad?.endTime));
@@ -280,10 +287,11 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       resepsiList: mappedResepsiList,
       receptions: mappedResepsiList,
       livestream: {
-        date: livestreamDate,
-        time: livestreamTime,
+        enabled: livestreamEnabled,
+        date: livestreamEnabled ? livestreamDate : "",
+        time: livestreamEnabled ? livestreamTime : "",
         platformLabel: livestreamPlatformLabel,
-        url: livestreamUrl,
+        url: livestreamEnabled ? livestreamUrl : "",
       },
     },
     akad: {
@@ -332,10 +340,10 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
     },
     livestream: {
       enabled: livestreamEnabled,
-      date: livestreamDate,
-      time: livestreamTime,
+      date: livestreamEnabled ? livestreamDate : "",
+      time: livestreamEnabled ? livestreamTime : "",
       platformLabel: livestreamPlatformLabel,
-      url: livestreamUrl,
+      url: livestreamEnabled ? livestreamUrl : "",
     },
     features: {
       countdownEnabled: true,
