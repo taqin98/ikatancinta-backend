@@ -76,6 +76,8 @@ function mapOrderToThemeInvitation(order, theme) {
     date: formatInvitationDate(
       payload?.akad?.date,
       payload?.event?.akad?.date,
+      payload?.resepsiList?.[0]?.date,
+      payload?.event?.resepsiList?.[0]?.date,
       payload?.resepsi?.date,
       payload?.event?.resepsi?.date,
       order?.publishedAt,

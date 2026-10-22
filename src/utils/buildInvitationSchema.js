@@ -106,6 +106,47 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
   const bride = payload?.bride || {};
   const akad = payload?.akad || {};
   const resepsi = payload?.resepsi || {};
+
+  const rawResepsiList = Array.isArray(payload?.resepsiList) && payload.resepsiList.length > 0
+    ? payload.resepsiList
+    : Array.isArray(payload?.receptions) && payload.receptions.length > 0
+      ? payload.receptions
+      : payload?.resepsi
+        ? [payload.resepsi]
+        : [];
+
+  const mappedResepsiList = rawResepsiList.map((item, index) => {
+    const itemCoverPhoto = normalizeDriveAssetUrl(item?.coverImage?.url) || akadCoverPhoto || heroPhoto;
+    return {
+      id: item?.id || index + 1,
+      title: item?.title || (rawResepsiList.length > 1 ? `Resepsi ${index + 1}` : "Resepsi"),
+      date: item?.date || akad?.date || "",
+      startTime: item?.startTime || "",
+      endTime: item?.endTime || "",
+      time: buildTimeRange(item?.startTime, item?.endTime),
+      venue: item?.venue || item?.venueName || "",
+      venueName: item?.venueName || item?.venue || "",
+      address: item?.address || akad?.address || "Simpang Lima Gumul, Kediri",
+      mapsLink: item?.mapsLink || item?.mapsUrl || akad?.mapsLink || "https://maps.google.com",
+      mapsUrl: item?.mapsUrl || item?.mapsLink || akad?.mapsLink || "https://maps.google.com",
+      coverPhoto: itemCoverPhoto,
+      coverImage: normalizeAssetPayload(item?.coverImage, "resepsi-cover") || normalizeAssetPayload(itemCoverPhoto, "resepsi-cover"),
+    };
+  });
+
+  const primaryResepsi = mappedResepsiList[0] || {
+    date: resepsi?.date || akad?.date || "",
+    startTime: resepsi?.startTime || "",
+    endTime: resepsi?.endTime || "",
+    time: buildTimeRange(resepsi?.startTime, resepsi?.endTime),
+    venue: resepsi?.venue || "",
+    venueName: resepsi?.venue || "",
+    address: resepsi?.address || akad?.address || "Simpang Lima Gumul, Kediri",
+    mapsLink: resepsi?.mapsLink || akad?.mapsLink || "https://maps.google.com",
+    mapsUrl: resepsi?.mapsLink || akad?.mapsLink || "https://maps.google.com",
+    coverPhoto: resepsiCoverPhoto,
+    coverImage: normalizeAssetPayload(resepsi?.coverImage, "resepsi-cover") || normalizeAssetPayload(resepsiCoverPhoto, "resepsi-cover"),
+  };
   const selectedTheme = payload?.selectedTheme || {};
   const music = payload?.music || {};
   const giftPayload = payload?.gift || {};
@@ -229,13 +270,15 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
         coverPhoto: akadCoverPhoto,
       },
       resepsi: {
-        date: resepsi?.date || akad?.date || "Senin, 30 Maret 2026",
-        time: buildTimeRange(resepsi?.startTime, resepsi?.endTime),
-        venueName: resepsi?.venue || "",
-        address: resepsi?.address || akad?.address || "Simpang Lima Gumul, Kediri",
-        mapsUrl: resepsi?.mapsLink || akad?.mapsLink || "https://maps.google.com",
-        coverPhoto: resepsiCoverPhoto,
+        date: primaryResepsi.date || resepsi?.date || akad?.date || "Senin, 30 Maret 2026",
+        time: primaryResepsi.time || buildTimeRange(resepsi?.startTime, resepsi?.endTime),
+        venueName: primaryResepsi.venueName || primaryResepsi.venue || resepsi?.venue || "",
+        address: primaryResepsi.address || resepsi?.address || akad?.address || "Simpang Lima Gumul, Kediri",
+        mapsUrl: primaryResepsi.mapsUrl || primaryResepsi.mapsLink || resepsi?.mapsLink || akad?.mapsLink || "https://maps.google.com",
+        coverPhoto: primaryResepsi.coverPhoto || resepsiCoverPhoto,
       },
+      resepsiList: mappedResepsiList,
+      receptions: mappedResepsiList,
       livestream: {
         date: livestreamDate,
         time: livestreamTime,
@@ -253,16 +296,9 @@ export function buildInvitationSchema({ theme, packageConfig, invitationSlug, or
       mapsLink: akad?.mapsLink || "https://maps.google.com",
       coverImage: normalizeAssetPayload(akad?.coverImage, "akad-cover") || normalizeAssetPayload(akadCoverPhoto, "akad-cover"),
     },
-    resepsi: {
-      date: resepsi?.date || akad?.date || "",
-      startTime: resepsi?.startTime || "",
-      endTime: resepsi?.endTime || "",
-      time: buildTimeRange(resepsi?.startTime, resepsi?.endTime),
-      venue: resepsi?.venue || "",
-      address: resepsi?.address || akad?.address || "Simpang Lima Gumul, Kediri",
-      mapsLink: resepsi?.mapsLink || akad?.mapsLink || "https://maps.google.com",
-      coverImage: normalizeAssetPayload(resepsi?.coverImage, "resepsi-cover") || normalizeAssetPayload(resepsiCoverPhoto, "resepsi-cover"),
-    },
+    resepsi: primaryResepsi,
+    resepsiList: mappedResepsiList,
+    receptions: mappedResepsiList,
     copy: {
       openingGreeting: selectedTheme?.name || theme?.title || "The Wedding Of",
       openingText: "Tanpa mengurangi rasa hormat, kami mengundang Anda untuk menghadiri acara pernikahan kami.",
