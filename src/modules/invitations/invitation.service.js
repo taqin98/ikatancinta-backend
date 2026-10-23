@@ -21,7 +21,7 @@ export async function getInvitationBySlug(slug) {
 
   const packageConfig = getPackageConfig(relatedOrder?.packageTier || theme.packageTier);
   const storedWishes = await listWishes(slug);
-  const wishes = [...storedWishes, ...INITIAL_WISHES];
+  const wishes = relatedOrder ? storedWishes : [...storedWishes, ...INITIAL_WISHES];
 
   return buildInvitationSchema({
     theme,
